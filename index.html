@@ -2077,6 +2077,7 @@
 
             <form id="spForm" onsubmit="handleSolePurchaseSubmit(event)">
                 <input type="file" id="spSolePhotoInput" accept="image/*" style="display:none">
+                <datalist id="soleTypesDatalist"></datalist>
                 <div class="modal-body" style="padding:22px 28px;background:#f8fafc">
 
                     <!-- Info Row -->
@@ -2115,6 +2116,9 @@
                                 </svg>
                                 <span style="font-weight:700;color:var(--brand-800);font-size:0.9rem">Detalle de
                                     Productos por Talla</span>
+                                <button type="button" class="btn btn-ghost" onclick="openSoleTypeModal()"
+                                    style="padding:2px 8px;font-size:0.7rem;color:var(--brand-600);font-weight:700;border:1px dashed var(--brand-300);background:var(--brand-50);border-radius:6px"
+                                    title="¿No ves la suela? Regístrala aquí">+ Nueva Suela</button>
                             </div>
                             <button type="button" onclick="addSolePurchaseLine()"
                                 style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--brand-600);color:white;border:none;border-radius:8px;font-size:0.78rem;font-weight:700;cursor:pointer;transition:background 0.15s"

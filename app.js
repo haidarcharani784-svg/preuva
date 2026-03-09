@@ -1146,24 +1146,27 @@ const openSolePurchaseModal = (initialTypeId = null) => {
         notify('Solo administradores pueden registrar compras.', 'error');
         return;
     }
+    renderSoleDatalist();
     document.getElementById('spForm').reset();
     document.getElementById('spDate').valueAsDate = new Date();
     document.getElementById('spLinesContainer').innerHTML = '';
     document.getElementById('spTotalPairsCalc').textContent = '0';
     solePurchaseLineCount = 0;
 
-    // Add first line automatically, passing the typeId if we clicked "Comprar" on a specific sole
+    // Add first line automatically
     addSolePurchaseLine(initialTypeId);
+    calcSolePurchaseTotal();
 
     openModal('solePurchaseModal');
 };
 
-const addSolePurchaseLine = (preSelectTypeId = null) => {
-    if (state.soleTypes.length === 0) {
-        notify('No hay tipos de suela registrados.', 'error');
-        return;
-    }
+const renderSoleDatalist = () => {
+    const dl = document.getElementById('soleTypesDatalist');
+    if (!dl) return;
+    dl.innerHTML = state.soleTypes.map(t => `<option value="${t.name}">`).join('');
+};
 
+const addSolePurchaseLine = (preSelectTypeId = null) => {
     solePurchaseLineCount++;
     const lineId = `spLine_${solePurchaseLineCount}`;
     const photoPreviewId = `spPhoto_${solePurchaseLineCount}`;
@@ -1183,7 +1186,8 @@ const addSolePurchaseLine = (preSelectTypeId = null) => {
         </div>`;
     };
 
-    const initialPhoto = preSelectTypeId ? getPhotoForType(preSelectTypeId) : getPhotoForType(null);
+    const preSelectType = preSelectTypeId ? state.soleTypes.find(x => x.id === preSelectTypeId) : null;
+    const initialPhoto = getPhotoForType(preSelectTypeId);
 
     const szInput = (sz) =>
         `<td style="padding:5px 4px"><input type="number" class="sp-sz" data-sz="${sz}" min="0" value="0"
@@ -1199,14 +1203,13 @@ const addSolePurchaseLine = (preSelectTypeId = null) => {
         <td style="padding:8px 12px">
             <div style="display:flex;align-items:center;gap:8px">
                 <div id="${photoPreviewId}">${initialPhoto}</div>
-                <select class="sp-type-select" required
+                <input type="text" class="sp-type-input" list="soleTypesDatalist" required
+                    placeholder="Escribe el nombre..."
+                    value="${preSelectType ? preSelectType.name : ''}"
                     style="flex:1;padding:7px 10px;border:1.5px solid var(--border-light);border-radius:8px;font-size:0.8rem;font-family:'Inter',sans-serif;background:white;outline:none;transition:border-color 0.15s;color:var(--text-primary)"
                     onfocus="this.style.borderColor='var(--brand-400)'"
                     onblur="this.style.borderColor='var(--border-light)'"
-                    onchange="updateSolePurchasePhoto('${lineId}','${photoPreviewId}')">
-                    <option value="">— Seleccionar suela —</option>
-                    ${optionsHtml}
-                </select>
+                    onchange="updateSolePurchasePhotoFromInput('${lineId}','${photoPreviewId}')">
             </div>
         </td>
         ${szInput(35)}${szInput(36)}${szInput(37)}${szInput(38)}${szInput(39)}${szInput(40)}${szInput(41)}${szInput(42)}${szInput(43)}
@@ -1224,6 +1227,35 @@ const addSolePurchaseLine = (preSelectTypeId = null) => {
     `;
     document.getElementById('spLinesContainer').appendChild(tr);
     calcSolePurchaseTotal();
+};
+
+const updateAllSolePurchaseSelects = () => {
+    const selects = document.querySelectorAll('.sp-type-select');
+    selects.forEach(select => {
+        const currentVal = select.value;
+        const optionsHtml = state.soleTypes.map(t =>
+            `<option value="${t.id}" ${t.id === currentVal ? 'selected' : ''}>${t.name}</option>`
+        ).join('');
+        select.innerHTML = '<option value="">— Seleccionar suela —</option>' + optionsHtml;
+    });
+};
+
+const updateSolePurchasePhotoFromInput = (lineId, photoId) => {
+    const tr = document.getElementById(lineId);
+    const input = tr.querySelector('.sp-type-input');
+    const name = input.value.trim();
+    const typeObj = state.soleTypes.find(t => t.name.toLowerCase() === name.toLowerCase());
+
+    const container = document.getElementById(photoId);
+    if (!container) return;
+
+    if (typeObj?.photo) {
+        container.innerHTML = `<img src="${typeObj.photo}" style="width:36px;height:36px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border-light);cursor:pointer" onclick="triggerSolePhotoUpload('${lineId}')" title="Actualizar foto">`;
+    } else {
+        container.innerHTML = `<div style="width:36px;height:36px;background:linear-gradient(135deg,#eef2ff,#e0e7ff);border-radius:8px;display:grid;place-items:center;color:var(--brand-400);cursor:pointer" onclick="triggerSolePhotoUpload('${lineId}')" title="Subir foto">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        </div>`;
+    }
 };
 
 // Update sole photo preview when user changes the select
@@ -1246,9 +1278,10 @@ let activeSpPhotoUploadLine = null;
 const triggerSolePhotoUpload = (lineId) => {
     const tr = document.getElementById(lineId);
     if (!tr) return;
-    const typeId = tr.querySelector('.sp-type-select')?.value;
-    if (!typeId) {
-        notify('Por favor selecciona primero un tipo de suela.', 'info');
+    const typeInput = tr.querySelector('.sp-type-input');
+    const typeName = typeInput?.value.trim();
+    if (!typeName) {
+        notify('Por favor ingresa primero un nombre de suela.', 'info');
         return;
     }
     activeSpPhotoUploadLine = lineId;
@@ -1260,15 +1293,27 @@ document.getElementById('spSolePhotoInput')?.addEventListener('change', async fu
     if (!file || !activeSpPhotoUploadLine) return;
 
     const tr = document.getElementById(activeSpPhotoUploadLine);
-    const typeId = tr?.querySelector('.sp-type-select')?.value;
-    const type = state.soleTypes.find(t => t.id === typeId);
+    const typeInput = tr?.querySelector('.sp-type-input');
+    const typeName = typeInput?.value.trim();
+    let type = state.soleTypes.find(t => t.name.toLowerCase() === typeName.toLowerCase());
+
+    if (!type) {
+        // If type doesn't exist, create it
+        type = {
+            id: uid(),
+            name: typeName,
+            sizes: { '35': 0, '36': 0, '37': 0, '38': 0, '39': 0, '40': 0, '41': 0, '42': 0, '43': 0 }
+        };
+        state.soleTypes.push(type);
+        renderSoleDatalist(); // Update datalist with new type
+    }
 
     if (type) {
         const photoData = await readFileAsBase64(file);
         type.photo = photoData;
         saveState();
         notify('Foto de suela actualizada', 'success');
-        updateSolePurchasePhoto(activeSpPhotoUploadLine, tr.querySelector('[id^="spPhoto_"]').id);
+        updateSolePurchasePhotoFromInput(activeSpPhotoUploadLine, tr.querySelector('[id^="spPhoto_"]').id);
         renderWarehouse(); // Reflect in tables
     }
     this.value = ''; // Reset input
@@ -1330,14 +1375,28 @@ const handleSolePurchaseSubmit = (e) => {
     let grandTotalPairs = 0;
 
     for (let tr of lines) {
-        const selectEl = tr.querySelector('.sp-type-select');
-        const typeId = selectEl?.value;
-        if (!typeId) {
-            notify('Por favor seleccione un producto (suela) en todas las filas.', 'error');
+        const inputEl = tr.querySelector('.sp-type-input');
+        const soleName = inputEl?.value.trim();
+        if (!soleName) {
+            notify('Por favor ingrese el nombre de la suela en todas las filas.', 'error');
             return;
         }
 
-        const typeObj = state.soleTypes.find(t => t.id === typeId);
+        let typeObj = state.soleTypes.find(t => t.name.toLowerCase() === soleName.toLowerCase());
+
+        // AUTO-REGISTER if not exists
+        if (!typeObj) {
+            typeObj = {
+                id: uid(),
+                name: soleName,
+                sizes: { '35': 0, '36': 0, '37': 0, '38': 0, '39': 0, '40': 0, '41': 0, '42': 0, '43': 0 }
+            };
+            state.soleTypes.push(typeObj);
+            renderSoleDatalist(); // Update datalist with new type
+        }
+
+        const typeId = typeObj.id;
+
         if (!typeObj) continue;
 
         const sizes = {};
@@ -1421,6 +1480,7 @@ const voidSolePurchase = (id) => {
     renderWarehouse();
     notify('Compra anulada y existencias actualizadas.', 'success');
 };
+
 
 const openSoleTypeModal = (id = null) => {
     document.getElementById('soleTypeForm').reset();
@@ -1515,6 +1575,7 @@ const handleSoleTypeSubmit = async (e) => {
     saveState();
     closeModal('soleTypeModal');
     renderWarehouse();
+    updateAllSolePurchaseSelects();
 };
 
 const handleMaterialSubmit = (e) => {
@@ -1538,6 +1599,7 @@ const handleMaterialSubmit = (e) => {
 };
 
 const renderWarehouse = () => {
+    renderSoleDatalist();
     // Render Materiales Generales
     const tbody = document.getElementById('warehouseTableBody');
     tbody.innerHTML = state.materials.map(m => `
