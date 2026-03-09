@@ -1,0 +1,17 @@
+{
+  "name": "FabriControl Pro",
+  "short_name": "FabriPro",
+  "description": "Control premium de fabricación de calzado",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
