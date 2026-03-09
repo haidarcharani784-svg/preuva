@@ -142,7 +142,7 @@
                 </a>
 
                 <div class="sidebar-section-label" style="margin-top:8px">Administración</div>
-                <a class="nav-item" data-page="trash">
+                <a class="nav-item" data-page="trash" style="display:none">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3 6 5 6 21 6" />
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -777,6 +777,7 @@
                                         <th>Proveedor</th>
                                         <th>Total Pares</th>
                                         <th>Registrado por</th>
+                                        <th style="text-align:center">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody id="solePurchaseHistory">
@@ -1491,9 +1492,21 @@
                     </div>
                     <div class="form-group" style="margin-bottom:16px;">
                         <label>Tipo de Suela a Usar</label>
-                        <select id="pcSoleType" required style="border-color:var(--brand-200)">
-                            <!-- Populated by JS -->
-                        </select>
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <div id="pcSolePhotoPreview"
+                                style="flex-shrink:0;width:42px;height:42px;border-radius:10px;background:var(--brand-50);border:1.5px solid var(--brand-100);display:grid;place-items:center;color:var(--brand-400);overflow:hidden">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.5">
+                                    <path
+                                        d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                                </svg>
+                            </div>
+                            <select id="pcSoleType" required style="border-color:var(--brand-200);flex:1"
+                                onchange="updatePladeSolePhoto()">
+                                <!-- Populated by JS -->
+                            </select>
+                        </div>
                     </div>
 
                     <div style="background:var(--brand-50);padding:12px;border-radius:6px;margin-bottom:16px;">
@@ -2063,7 +2076,8 @@
             </div>
 
             <form id="spForm" onsubmit="handleSolePurchaseSubmit(event)">
-                <div class="modal-body" style="padding:24px 28px;background:#f8fafc">
+                <input type="file" id="spSolePhotoInput" accept="image/*" style="display:none">
+                <div class="modal-body" style="padding:22px 28px;background:#f8fafc">
 
                     <!-- Info Row -->
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">

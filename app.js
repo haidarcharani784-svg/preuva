@@ -517,14 +517,10 @@ const calculateOrderCortadorTotal = () => {
 };
 
 const calculateTotalPairs = () => {
-    const sz37 = parseInt(document.getElementById('sz37').value) || 0;
-    const sz38 = parseInt(document.getElementById('sz38').value) || 0;
-    const sz39 = parseInt(document.getElementById('sz39').value) || 0;
-    const sz40 = parseInt(document.getElementById('sz40').value) || 0;
-    const sz41 = parseInt(document.getElementById('sz41').value) || 0;
-    const sz42 = parseInt(document.getElementById('sz42').value) || 0;
-
-    const total = sz37 + sz38 + sz39 + sz40 + sz41 + sz42;
+    let total = 0;
+    for (let i = 35; i <= 43; i++) {
+        total += parseInt(document.getElementById('sz' + i)?.value) || 0;
+    }
     document.getElementById('orderPairsDisplay').textContent = total;
     document.getElementById('orderPairs').value = total;
     calculateOrderCortadorTotal();
@@ -581,6 +577,11 @@ const handleOrderSubmit = async (e) => {
         pintarSuelaPhotoData = await readFileAsBase64(pintarSuelaPhotoFile);
     }
 
+    let dist = {};
+    for (let i = 35; i <= 43; i++) {
+        dist[i] = parseInt(document.getElementById('sz' + i)?.value) || 0;
+    }
+
     const editId = document.getElementById('orderEditId').value;
 
     if (editId) {
@@ -589,7 +590,7 @@ const handleOrderSubmit = async (e) => {
         if (existingOrder) {
             existingOrder.model = document.getElementById('orderModel').value;
             // Let user update pairs only if task generation hasn't deeply progressed? We will allow it for simple corrections.
-            const newPairs = parseInt(document.getElementById('orderPairs').value);
+            const newPairs = parseInt(document.getElementById('orderPairs').value) || 0;
             existingOrder.pairs = newPairs;
             existingOrder.date = document.getElementById('orderDeadline').value;
             existingOrder.notes = document.getElementById('orderNotes').value;
@@ -597,17 +598,7 @@ const handleOrderSubmit = async (e) => {
             existingOrder.color = document.getElementById('orderColor').value || '';
             existingOrder.soleType = document.getElementById('orderSoleType').value || null;
 
-            existingOrder.sizeDistribution = {
-                '35': parseInt(document.getElementById('sz35').value) || 0,
-                '36': parseInt(document.getElementById('sz36').value) || 0,
-                '37': parseInt(document.getElementById('sz37').value) || 0,
-                '38': parseInt(document.getElementById('sz38').value) || 0,
-                '39': parseInt(document.getElementById('sz39').value) || 0,
-                '40': parseInt(document.getElementById('sz40').value) || 0,
-                '41': parseInt(document.getElementById('sz41').value) || 0,
-                '42': parseInt(document.getElementById('sz42').value) || 0,
-                '43': parseInt(document.getElementById('sz43').value) || 0
-            };
+            existingOrder.sizeDistribution = dist;
 
             existingOrder.processes = {
                 bordado: document.getElementById('procBordado').checked,
@@ -641,17 +632,7 @@ const handleOrderSubmit = async (e) => {
         color: document.getElementById('orderColor').value || '',
         soleType: document.getElementById('orderSoleType').value || null,
         bagCode: null,
-        sizeDistribution: {
-            '35': parseInt(document.getElementById('sz35').value) || 0,
-            '36': parseInt(document.getElementById('sz36').value) || 0,
-            '37': parseInt(document.getElementById('sz37').value) || 0,
-            '38': parseInt(document.getElementById('sz38').value) || 0,
-            '39': parseInt(document.getElementById('sz39').value) || 0,
-            '40': parseInt(document.getElementById('sz40').value) || 0,
-            '41': parseInt(document.getElementById('sz41').value) || 0,
-            '42': parseInt(document.getElementById('sz42').value) || 0,
-            '43': parseInt(document.getElementById('sz43').value) || 0
-        },
+        sizeDistribution: dist,
         processes: {
             bordado: document.getElementById('procBordado').checked,
             bordadoDetail: document.getElementById('procBordadoColor').value || '',
@@ -827,13 +808,11 @@ const editOrder = (id) => {
     updateSolePhotoPreview();
 
     // Sizes
-    const sizes = order.sizeDistribution || { '37': 0, '38': 0, '39': 0, '40': 0, '41': 0, '42': 0 };
-    document.getElementById('sz37').value = sizes['37'];
-    document.getElementById('sz38').value = sizes['38'];
-    document.getElementById('sz39').value = sizes['39'];
-    document.getElementById('sz40').value = sizes['40'];
-    document.getElementById('sz41').value = sizes['41'];
-    document.getElementById('sz42').value = sizes['42'];
+    const sizes = order.sizeDistribution || {};
+    for (let i = 35; i <= 43; i++) {
+        const input = document.getElementById('sz' + i);
+        if (input) input.value = sizes[i] || 0;
+    }
     calculateTotalPairs();
 
     // Processes
@@ -1197,9 +1176,9 @@ const addSolePurchaseLine = (preSelectTypeId = null) => {
     const getPhotoForType = (typeId) => {
         const t = state.soleTypes.find(x => x.id === typeId);
         if (t?.photo) {
-            return `<img src="${t.photo}" style="width:36px;height:36px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border-light)">`;
+            return `<img src="${t.photo}" style="width:36px;height:36px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border-light);cursor:pointer" onclick="triggerSolePhotoUpload('${lineId}')" title="Actualizar foto">`;
         }
-        return `<div style="width:36px;height:36px;background:linear-gradient(135deg,#eef2ff,#e0e7ff);border-radius:8px;display:grid;place-items:center;color:var(--brand-400)">
+        return `<div style="width:36px;height:36px;background:linear-gradient(135deg,#eef2ff,#e0e7ff);border-radius:8px;display:grid;place-items:center;color:var(--brand-400);cursor:pointer" onclick="triggerSolePhotoUpload('${lineId}')" title="Subir foto">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
         </div>`;
     };
@@ -1255,11 +1234,57 @@ const updateSolePurchasePhoto = (lineId, photoId) => {
     const typeId = tr.querySelector('.sp-type-select')?.value;
     const t = state.soleTypes.find(x => x.id === typeId);
     if (t?.photo) {
-        container.innerHTML = `<img src="${t.photo}" style="width:36px;height:36px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border-light)">`;
+        container.innerHTML = `<img src="${t.photo}" style="width:36px;height:36px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border-light);cursor:pointer" onclick="triggerSolePhotoUpload('${lineId}')" title="Actualizar foto">`;
     } else {
-        container.innerHTML = `<div style="width:36px;height:36px;background:linear-gradient(135deg,#eef2ff,#e0e7ff);border-radius:8px;display:grid;place-items:center;color:var(--brand-400)">
+        container.innerHTML = `<div style="width:36px;height:36px;background:linear-gradient(135deg,#eef2ff,#e0e7ff);border-radius:8px;display:grid;place-items:center;color:var(--brand-400);cursor:pointer" onclick="triggerSolePhotoUpload('${lineId}')" title="Subir foto">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
         </div>`;
+    }
+};
+
+let activeSpPhotoUploadLine = null;
+const triggerSolePhotoUpload = (lineId) => {
+    const tr = document.getElementById(lineId);
+    if (!tr) return;
+    const typeId = tr.querySelector('.sp-type-select')?.value;
+    if (!typeId) {
+        notify('Por favor selecciona primero un tipo de suela.', 'info');
+        return;
+    }
+    activeSpPhotoUploadLine = lineId;
+    document.getElementById('spSolePhotoInput').click();
+};
+
+document.getElementById('spSolePhotoInput')?.addEventListener('change', async function () {
+    const file = this.files[0];
+    if (!file || !activeSpPhotoUploadLine) return;
+
+    const tr = document.getElementById(activeSpPhotoUploadLine);
+    const typeId = tr?.querySelector('.sp-type-select')?.value;
+    const type = state.soleTypes.find(t => t.id === typeId);
+
+    if (type) {
+        const photoData = await readFileAsBase64(file);
+        type.photo = photoData;
+        saveState();
+        notify('Foto de suela actualizada', 'success');
+        updateSolePurchasePhoto(activeSpPhotoUploadLine, tr.querySelector('[id^="spPhoto_"]').id);
+        renderWarehouse(); // Reflect in tables
+    }
+    this.value = ''; // Reset input
+});
+
+const updatePladeSolePhoto = () => {
+    const select = document.getElementById('pcSoleType');
+    const preview = document.getElementById('pcSolePhotoPreview');
+    if (!select || !preview) return;
+    const t = state.soleTypes.find(x => x.id === select.value);
+    if (t?.photo) {
+        preview.innerHTML = `<img src="${t.photo}" style="width:100%;height:100%;object-fit:cover">`;
+        preview.style.borderColor = 'var(--brand-300)';
+    } else {
+        preview.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`;
+        preview.style.borderColor = 'var(--brand-100)';
     }
 };
 
@@ -1361,6 +1386,40 @@ const handleSolePurchaseSubmit = (e) => {
     closeModal('solePurchaseModal');
     renderWarehouse();
     notify(`Compra registrada: +${grandTotalPairs} pares en total`);
+};
+
+const voidSolePurchase = (id) => {
+    if (state.currentUser?.role !== 'admin') { notify('Sin permisos para anular.', 'error'); return; }
+
+    const p = state.solePurchases.find(x => x.id === id);
+    if (!p) return;
+    if (p.void) { notify('Esta compra ya está anulada.', 'info'); return; }
+
+    const reason = prompt('¿Por qué deseas ANULAR esta compra? (Opcional):');
+    if (reason === null) return; // Cancelled
+
+    if (!confirm('¿Confirmas que deseas ANULAR esta compra? Esto restará las cantidades del inventario.')) return;
+
+    const typeObj = state.soleTypes.find(t => t.id === p.typeId);
+    if (typeObj) {
+        // Rollback inventory
+        for (let sz in p.sizes) {
+            const val = p.sizes[sz] || 0;
+            if (val > 0) {
+                typeObj.sizes[sz] = Math.max(0, (typeObj.sizes[sz] || 0) - val);
+            }
+        }
+    }
+
+    p.void = true;
+    p.voidReason = reason || 'Sin motivo especificado';
+    p.voidedAt = new Date().toISOString();
+    p.voidedBy = state.currentUser?.user || 'admin';
+
+    addEvent(`Compra de suelas (${p.totalPairs} pares) ANULADA: ${p.voidReason}`, 'warning');
+    saveState();
+    renderWarehouse();
+    notify('Compra anulada y existencias actualizadas.', 'success');
 };
 
 const openSoleTypeModal = (id = null) => {
@@ -1552,13 +1611,18 @@ const renderWarehouse = () => {
                         </div>
                         <!-- Actions -->
                         ${state.currentUser?.role === 'admin' ? `
-                        <button onclick="openSolePurchaseModal('${type.id}')"
-                            style="display:inline-flex;align-items:center;gap:7px;padding:9px 16px;background:linear-gradient(135deg,var(--success-500),#059669);color:white;border:none;border-radius:10px;font-size:0.8rem;font-weight:700;cursor:pointer;transition:all 0.15s;flex-shrink:0;box-shadow:0 2px 8px rgba(16,185,129,0.3)"
-                            onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(16,185,129,0.4)'"
-                            onmouseout="this.style.transform='none';this.style.boxShadow='0 2px 8px rgba(16,185,129,0.3)'">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                            Registrar Compra
-                        </button>` : ''}
+                        <div style="display:flex;gap:4px">
+                            <button onclick="openSoleTypeModal('${type.id}')" class="btn btn-ghost" style="padding:8px;color:var(--brand-600)" title="Editar Nombre/Foto">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </button>
+                            <button onclick="openSolePurchaseModal('${type.id}')"
+                                style="display:inline-flex;align-items:center;gap:7px;padding:9px 16px;background:linear-gradient(135deg,var(--success-500),#059669);color:white;border:none;border-radius:10px;font-size:0.8rem;font-weight:700;cursor:pointer;transition:all 0.15s;flex-shrink:0;box-shadow:0 2px 8px rgba(16,185,129,0.3)"
+                                onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(16,185,129,0.4)'"
+                                onmouseout="this.style.transform='none';this.style.boxShadow='0 2px 8px rgba(16,185,129,0.3)'">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                Registrar Compra
+                            </button>
+                        </div>` : ''}
                     </div>
 
                     <!-- Size Grid -->
@@ -1595,13 +1659,25 @@ const renderWarehouse = () => {
             purchaseHistEl.innerHTML = purchases.map(p => {
                 const typeObj = state.soleTypes.find(t => t.id === p.typeId);
                 const sizesStr = Object.entries(p.sizes).filter(([, v]) => v > 0).map(([k, v]) => `#${k}: ${v}`).join(', ');
-                return `<tr>
-                    <td style="font-size:0.8rem">${new Date(p.date).toLocaleDateString('es-ES')}</td>
+                const isVoid = !!p.void;
+
+                return `<tr style="${isVoid ? 'text-decoration:line-through;opacity:0.6;background:#fff5f5' : ''}">
+                    <td style="font-size:0.8rem">
+                        ${new Date(p.date).toLocaleDateString('es-ES')}
+                        ${isVoid ? `<br><span style="color:var(--danger-600);font-weight:800;font-size:0.65rem;text-decoration:none !important;display:inline-block">ANULADA</span><br><em style="font-size:0.6rem;text-decoration:none !important;display:inline-block">Motivo: ${p.voidReason || '—'}</em>` : ''}
+                    </td>
                     <td style="font-size:0.8rem;font-weight:600">${typeObj?.name || '—'}</td>
                     <td style="font-size:0.8rem">${sizesStr}</td>
                     <td style="font-size:0.8rem">${p.supplier || '—'}</td>
                     <td style="font-size:0.8rem;font-weight:700;color:var(--brand-600)">${p.totalPairs} pares</td>
                     <td style="font-size:0.8rem">${p.registeredBy || '—'}</td>
+                    <td style="text-align:center">
+                        ${(!isVoid && state.currentUser?.role === 'admin') ? `
+                            <button onclick="voidSolePurchase('${p.id}')" class="btn btn-ghost" style="padding:4px;color:var(--danger-500)" title="Anular Compra">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+                            </button>
+                        ` : '—'}
+                    </td>
                 </tr>`;
             }).join('');
         }
@@ -2072,6 +2148,13 @@ const openAssignGuarnicionModal = (currentId, nextId) => {
     document.getElementById('agTotalPairs').textContent = nextTask ? nextTask.pairs : 0;
 
     document.getElementById('agPaymentInput').value = state.pricePerPair;
+
+    // Clarify payment label
+    const paymentLabel = document.querySelector('#assignGuarnicionForm .admin-payment-field label');
+    if (paymentLabel) {
+        paymentLabel.innerHTML = `Monto a Pagar al <strong>${nextPhase?.name || 'Siguiente'}</strong> ($ por Par)`;
+    }
+
     calculateAgTotal();
     openModal('assignGuarnicionModal');
 };
@@ -3001,6 +3084,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Auto-update clock
     setInterval(updateDate, 60000);
+
+    window.addEventListener('beforeunload', () => {
+        if (state.currentUser) {
+            const userInState = state.users.find(u => u.id === state.currentUser.id);
+            if (userInState) {
+                userInState.isConnected = false;
+                saveState();
+            }
+        }
+    });
 });
 
 // Expose globals for onclick handlers
@@ -3099,17 +3192,20 @@ const renderHistory = () => {
         else if (evt.type === 'info') typeBadge = '<span class="badge badge-info">Ingreso / Movimiento</span>';
         else if (evt.type === 'warning') typeBadge = '<span class="badge badge-warning">Modificación</span>';
         else if (evt.type === 'error') typeBadge = '<span class="badge badge-danger">Eliminación / Error</span>';
-        else typeBadge = `< span class="badge badge-info" > ${evt.type}</span > `;
+        else typeBadge = `<span class="badge badge-info">${evt.type}</span>`;
 
         tr.innerHTML = `
-    < td style = "padding:16px 24px;white-space:nowrap" > ${date}</td >
+            <td style="padding:16px 24px;white-space:nowrap">${date}</td>
             <td style="padding:16px 24px;font-weight:500">${evt.message}</td>
             <td style="padding:16px 24px">${typeBadge}</td>
-`;
+        `;
         tbody.appendChild(tr);
     });
 };
 
+window.updatePladeSolePhoto = updatePladeSolePhoto;
+window.triggerSolePhotoUpload = triggerSolePhotoUpload;
+window.voidSolePurchase = voidSolePurchase;
 window.renderHistory = renderHistory;
 
 // --- Feature: Plade Orders UI ---
